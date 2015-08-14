@@ -1,0 +1,5 @@
+      [paste.app_factory]
+      main = minesweeper:main
+      [console_scripts]
+      initialize_minesweeper_db = minesweeper.scripts.initializedb:main
+      
