@@ -10,13 +10,18 @@ from .models import (
 
 
 # Creates a board with given dimensions that has no mines on the start position
-def init_game_state(width, height, start_x, start_y):
+def create_new_game(width, height, start_x, start_y):
     mine_probability = 0.3
+    mines_count = 0
     board = [[0 for _ in range(width)] for _ in range(height)]
     for y in range(height):
         for x in range(width):
-            board[y][x] = random.random() < mine_probability and not (x == start_x and y == start_y)
-    return board
+            if random.random() < mine_probability and not (x == start_x and y == start_y):
+                board[y][x] = True
+                mines_count += 1
+            else:
+                board[y][x] = False
+    return Game(board_state=board, mines_count=mines_count)
 
 
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
@@ -46,7 +51,7 @@ def new_game(request):
     height = int(request.POST['height'])
     x = int(request.POST['x'])
     y = int(request.POST['y'])
-    game = Game(board_state=init_game_state(width, height, x, y))
+    game = create_new_game(width, height, x, y)
     DBSession.add(game)
     DBSession.flush()
     request.session['current_game'] = game.id
