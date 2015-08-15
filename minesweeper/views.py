@@ -34,7 +34,9 @@ def new_game(request):
     DBSession.add(game)
     DBSession.flush()
     request.session['current_game'] = game.id
-    return {'game_id': game.id}
+    result = process_click(game, x, y)
+    result['game_id'] = game.id
+    return result
 
 
 @view_config(route_name='click', renderer='json')
@@ -42,17 +44,42 @@ def click(request):
     x = int(request.POST['x'])
     y = int(request.POST['y'])
     game = DBSession.query(Game).get(request.session['current_game'])
-
     if x < 0 or x >= len(game.board_state[0]) or y < 0 or y >= len(game.board_state):
         return Response('Coordinates out of range', content_type='text/plain', status_int=500)
+    return process_click(game, x, y)
 
+
+def process_click(game, x, y):
     DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
     game.status = GameStatusEnum.lost.value
     if game.board_state[y][x]:
         game.status = GameStatusEnum.lost.value
-        return {'status': 'mine'}
+        return {'status': game.status, 'boardState': game.board_state}
     else:
-        return {'status': 'empty'}
+        cells = []
+        visited = set()
+
+        def traverse(x, y):
+            if (x, y) in visited:
+                return
+            visited.add((x, y))
+
+            def visit_neighbours(f, acc=None):
+                for i in range(y - 1, y + 2):
+                    for j in range(x - 1, x + 2):
+                        if i < 0 or i >= len(game.board_state) or j < 0 or j >= len(game.board_state[0]):
+                            continue
+                        acc = f(i, j, acc)
+                return acc
+
+            neighbour_mines = visit_neighbours(lambda i, j, acc: acc + 1 if game.board_state[i][j] else acc, 0)
+
+            cells.append({'x': x, 'y': y, 'neighbour_mines': neighbour_mines})
+            if neighbour_mines == 0:
+                visit_neighbours(lambda i, j, _: traverse(j, i))
+
+        traverse(x, y)
+        return {'status': GameStatusEnum.playing.value, 'cells': cells}
 
 
 @view_config(route_name='toggle_flag', renderer='json')

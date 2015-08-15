@@ -18,12 +18,12 @@
     content: 'F';
 }
 
-#board td.bomb {
+#board td.mine {
     background-color: red;
 }
 
-#board td.bomb:before {
-    content: 'B';
+#board td.mine:before {
+    content: 'M';
 }
 
 #controls {
