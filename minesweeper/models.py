@@ -1,4 +1,5 @@
 from enum import unique, Enum
+import datetime
 
 from sqlalchemy import (
     Column,
@@ -17,21 +18,29 @@ Base = declarative_base()
 
 
 @unique
-class CellState(Enum):
+class CellStateEnum(Enum):
     empty = 1
     mine = 2
 
 
 @unique
-class PlayerAction(Enum):
+class PlayerActionEnum(Enum):
     click = 1
     flag = 2
+
+@unique
+class GameStatusEnum(Enum):
+    playing = 'playing'
+    won = 'won'
+    lost = 'lost'
 
 
 class Game(Base):
     __tablename__ = 'games'
     id = Column(Integer, primary_key=True)
     board_state = Column(PickleType)
+    status = Column(Text, default=GameStatusEnum.playing.value)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 class Player(Base):
@@ -45,5 +54,7 @@ class PlayerAction(Base):
     id = Column('rowid', Integer, primary_key=True)  # implicit id
     game_id = Column(Integer, ForeignKey('games.id'))
     player_id = Column(Integer, ForeignKey('players.id'))
-    action = Column(Text)
-    timestamp = Column(DateTime)
+    x = Column(Integer)
+    y = Column(Integer)
+    action = Column(Integer)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
