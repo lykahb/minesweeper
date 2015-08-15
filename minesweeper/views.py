@@ -24,6 +24,22 @@ def home(request):
     return {}
 
 
+@view_config(route_name='game_history', renderer='json')
+def game_history(request):
+    game_id = request.GET['id']
+    request.session['current_game'] = game_id
+    actions = DBSession.query(PlayerAction).filter(PlayerAction.game_id == game_id) \
+        .order_by(PlayerAction.timestamp)
+    game = DBSession.query(Game).get(game_id)
+    history = []
+    for action in actions:
+        result = {'request': {'action': action.action, 'x': action.x, 'y': action.y}}
+        if action.action == PlayerActionEnum.click.value:
+            result['response'] = process_click(game, action.x, action.y)
+        history.append(result)
+    return {'width': len(game.board_state[0]), 'height': len(game.board_state), 'history': history}
+
+
 @view_config(route_name='new_game', renderer='json')
 def new_game(request):
     width = int(request.POST['width'])
@@ -35,6 +51,7 @@ def new_game(request):
     DBSession.flush()
     request.session['current_game'] = game.id
     result = process_click(game, x, y)
+    DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
     result['game_id'] = game.id
     return result
 
@@ -46,15 +63,15 @@ def click(request):
     game = DBSession.query(Game).get(request.session['current_game'])
     if x < 0 or x >= len(game.board_state[0]) or y < 0 or y >= len(game.board_state):
         return Response('Coordinates out of range', content_type='text/plain', status_int=500)
-    return process_click(game, x, y)
+    DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
+    result = process_click(game, x, y)
+    game.status = result['status']
+    return result
 
 
 def process_click(game, x, y):
-    DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
-    game.status = GameStatusEnum.lost.value
     if game.board_state[y][x]:
-        game.status = GameStatusEnum.lost.value
-        return {'status': game.status, 'boardState': game.board_state}
+        return {'status': GameStatusEnum.lost.value, 'boardState': game.board_state}
     else:
         cells = []
         visited = set()
@@ -91,4 +108,4 @@ def toggle_flag(request):
     if x < 0 or x >= len(game.board_state[0]) or y < 0 or y >= len(game.board_state):
         return Response('Coordinates out of range', content_type='text/plain', status_int=500)
 
-    DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.flag.value, x=x, y=y))
+    DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.toggle_flag.value, x=x, y=y))

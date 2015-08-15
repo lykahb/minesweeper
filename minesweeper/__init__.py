@@ -22,5 +22,6 @@ def main(global_config, **settings):
     config.add_route('new_game', '/game/new')
     config.add_route('click', '/game/click')
     config.add_route('toggle_flag', '/game/toggle_flag')
+    config.add_route('game_history', '/game/history')
     config.scan()
     return config.make_wsgi_app()

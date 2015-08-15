@@ -20,7 +20,7 @@ Base = declarative_base()
 @unique
 class PlayerActionEnum(Enum):
     click = 'click'
-    flag = 'flag'
+    toggle_flag = 'toggle_flag'
 
 @unique
 class GameStatusEnum(Enum):
@@ -50,5 +50,5 @@ class PlayerAction(Base):
     player_id = Column(Integer, ForeignKey('players.id'))
     x = Column(Integer)
     y = Column(Integer)
-    action = Column(Integer)
+    action = Column(Text)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
