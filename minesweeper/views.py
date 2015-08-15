@@ -53,7 +53,7 @@ def click(request):
     game.status = GameStatusEnum.lost.value
     if game.board_state[y][x] == CellStateEnum.mine.value:
         game.status = GameStatusEnum.lost.value
-        return {'status': 'lost'}
+        return {'status': 'bomb'}
     else:
         return {'status': 'empty'}
 

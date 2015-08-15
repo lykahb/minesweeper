@@ -1,0 +1,31 @@
+#board td {
+    border: 1px solid #ccc;
+    width: 2em;
+    height: 2em;
+    text-align: center;
+    cursor: pointer;
+}
+
+#board td {
+    background-color: beige;
+}
+
+#board td.empty {
+    background-color: grey;
+}
+
+#board td.flag:before {
+    content: 'F';
+}
+
+#board td.bomb {
+    background-color: red;
+}
+
+#board td.bomb:before {
+    content: 'B';
+}
+
+#controls {
+    margin-top: 5%;
+}

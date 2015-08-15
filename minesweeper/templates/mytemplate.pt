@@ -24,9 +24,13 @@
 </head>
 
 <body>
-
-<div id="board"></div>
-<div id="controls"></div>
+<div class="container">
+    <h1>Minesweeper</h1>
+    <table id="board">
+        <tbody></tbody>
+    </table>
+    <div id="controls"></div>
+</div>
 
 <!-- Bootstrap core JavaScript
 ================================================== -->
