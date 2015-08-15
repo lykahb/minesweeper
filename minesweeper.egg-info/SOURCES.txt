@@ -17,8 +17,8 @@ minesweeper.egg-info/requires.txt
 minesweeper.egg-info/top_level.txt
 minesweeper/scripts/__init__.py
 minesweeper/scripts/initializedb.py
+minesweeper/static/minesweeper.js
 minesweeper/static/pyramid-16x16.png
 minesweeper/static/pyramid.png
 minesweeper/static/theme.css
-minesweeper/static/theme.min.css
 minesweeper/templates/mytemplate.pt
