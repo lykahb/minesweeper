@@ -10,6 +10,14 @@
     background-color: beige;
 }
 
+#board.lost {
+    outline: red solid 5px;
+}
+
+#board.won {
+    outline: green solid 5px;
+}
+
 #board td.empty {
     background-color: grey;
 }

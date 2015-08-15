@@ -43,20 +43,22 @@
     });
 
     function newGame() {
+        $("#board").removeClass("won lost");
         $("#board tbody").empty().append(createBoard(gameInfo.width, gameInfo.height));
         gameInfo.status = 'new';
     }
 
     function processClick(data) {
         gameInfo.status = data.status;
-        if (data.status == 'lost') {
-            drawLostBoard(data.boardState);
-        } else {
+        if (data.status == 'playing') {
             updateBoard(data.cells);
+        } else {
+            drawFullBoard(data.boardState);
+            $("#board").addClass(data.status);
         }
     }
 
-    function drawLostBoard(boardState) {
+    function drawFullBoard(boardState) {
         for (var i = 0; i < gameInfo.height; i++) {
             for (var j = 0; j < gameInfo.width; j++) {
                 getCell(j, i).empty().attr("class", boardState[i][j] ? "mine" : "empty")

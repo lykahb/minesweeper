@@ -56,10 +56,10 @@ def new_game(request):
     x = int(request.POST['x'])
     y = int(request.POST['y'])
     game = create_new_game(width, height, x, y)
+    result = process_click(game, x, y)
     DBSession.add(game)
     DBSession.flush()
     request.session['current_game'] = game.id
-    result = process_click(game, x, y)
     DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
     result['game_id'] = game.id
     return result
@@ -77,7 +77,7 @@ def click(request):
     DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
     result = process_click(game, x, y)
     game.status = result['status']
-    DBSession.flush()
+    DBSession.query(Game).filter(Game.id == game.id).update({Game.visited_cells: game.visited_cells})
     return result
 
 
@@ -107,7 +107,14 @@ def process_click(game, x, y):
                 visit_neighbours(lambda i, j, _: traverse(j, i))
 
         traverse(x, y)
-        return {'status': GameStatusEnum.playing.value, 'cells': cells}
+
+        sum_visited = 0
+        for row in game.visited_cells:
+            sum_visited += sum(row)
+        if sum_visited + game.mines_count == len(game.board_state) * len(game.board_state[0]):
+            return {'status': GameStatusEnum.won.value, 'boardState': game.board_state}
+        else:
+            return {'status': GameStatusEnum.playing.value, 'cells': cells}
 
 
 @view_config(route_name='toggle_flag', renderer='json')
