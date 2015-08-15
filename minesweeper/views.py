@@ -14,6 +14,7 @@ def create_new_game(width, height, start_x, start_y):
     mine_probability = 0.3
     mines_count = 0
     board = [[0 for _ in range(width)] for _ in range(height)]
+    visited_cells = [[False for _ in range(width)] for _ in range(height)]
     for y in range(height):
         for x in range(width):
             if random.random() < mine_probability and not (x == start_x and y == start_y):
@@ -21,7 +22,7 @@ def create_new_game(width, height, start_x, start_y):
                 mines_count += 1
             else:
                 board[y][x] = False
-    return Game(board_state=board, mines_count=mines_count)
+    return Game(board_state=board, visited_cells=visited_cells, mines_count=mines_count)
 
 
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
@@ -36,13 +37,16 @@ def game_history(request):
     actions = DBSession.query(PlayerAction).filter(PlayerAction.game_id == game_id) \
         .order_by(PlayerAction.timestamp)
     game = DBSession.query(Game).get(game_id)
+    width = len(game.board_state[0])
+    height = len(game.board_state)
+    game.visited_cells = [[False for _ in range(width)] for _ in range(height)]
     history = []
     for action in actions:
         result = {'request': {'action': action.action, 'x': action.x, 'y': action.y}}
         if action.action == PlayerActionEnum.click.value:
             result['response'] = process_click(game, action.x, action.y)
         history.append(result)
-    return {'width': len(game.board_state[0]), 'height': len(game.board_state), 'history': history}
+    return {'width': width, 'height': height, 'history': history}
 
 
 @view_config(route_name='new_game', renderer='json')
@@ -68,9 +72,12 @@ def click(request):
     game = DBSession.query(Game).get(request.session['current_game'])
     if x < 0 or x >= len(game.board_state[0]) or y < 0 or y >= len(game.board_state):
         return Response('Coordinates out of range', content_type='text/plain', status_int=500)
+    if game.status != GameStatusEnum.playing.value or game.visited_cells[y][x]:
+        return Response('Invalid request', content_type='text/plain', status_int=500)
     DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
     result = process_click(game, x, y)
     game.status = result['status']
+    DBSession.flush()
     return result
 
 
@@ -79,12 +86,11 @@ def process_click(game, x, y):
         return {'status': GameStatusEnum.lost.value, 'boardState': game.board_state}
     else:
         cells = []
-        visited = set()
 
         def traverse(x, y):
-            if (x, y) in visited:
+            if game.visited_cells[y][x]:
                 return
-            visited.add((x, y))
+            game.visited_cells[y][x] = True
 
             def visit_neighbours(f, acc=None):
                 for i in range(y - 1, y + 2):

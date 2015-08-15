@@ -33,6 +33,7 @@ class Game(Base):
     __tablename__ = 'games'
     id = Column(Integer, primary_key=True)
     board_state = Column(PickleType)
+    visited_cells = Column(PickleType)
     mines_count = Column(Integer)
     status = Column(Text, default=GameStatusEnum.playing.value)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
