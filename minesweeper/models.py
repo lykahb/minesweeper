@@ -18,15 +18,9 @@ Base = declarative_base()
 
 
 @unique
-class CellStateEnum(Enum):
-    empty = 1
-    mine = 2
-
-
-@unique
 class PlayerActionEnum(Enum):
-    click = 1
-    flag = 2
+    click = 'click'
+    flag = 'flag'
 
 @unique
 class GameStatusEnum(Enum):

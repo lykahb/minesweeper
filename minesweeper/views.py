@@ -6,7 +6,7 @@ from .models import (
     DBSession,
     Game,
     PlayerAction,
-    CellStateEnum, PlayerActionEnum, GameStatusEnum)
+    PlayerActionEnum, GameStatusEnum)
 
 
 # Creates a board with given dimensions that has no mines on the start position
@@ -15,10 +15,7 @@ def init_game_state(width, height, start_x, start_y):
     board = [[0 for _ in range(width)] for _ in range(height)]
     for y in range(height):
         for x in range(width):
-            if random.random() < mine_probability and not (x == start_x and y == start_y):
-                board[y][x] = CellStateEnum.mine.value
-            else:
-                board[y][x] = CellStateEnum.empty.value
+            board[y][x] = random.random() < mine_probability and not (x == start_x and y == start_y)
     return board
 
 
@@ -51,9 +48,9 @@ def click(request):
 
     DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
     game.status = GameStatusEnum.lost.value
-    if game.board_state[y][x] == CellStateEnum.mine.value:
+    if game.board_state[y][x]:
         game.status = GameStatusEnum.lost.value
-        return {'status': 'bomb'}
+        return {'status': 'mine'}
     else:
         return {'status': 'empty'}
 
