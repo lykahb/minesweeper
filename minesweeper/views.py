@@ -10,8 +10,7 @@ from .models import (
 
 
 # Creates a board with given dimensions that has no mines on the start position
-def create_new_game(width, height, start_x, start_y):
-    mine_probability = 0.3
+def create_new_game(width, height, mine_probability, start_x, start_y):
     mines_count = 0
     board = [[0 for _ in range(width)] for _ in range(height)]
     visited_cells = [[False for _ in range(width)] for _ in range(height)]
@@ -55,7 +54,8 @@ def new_game(request):
     height = int(request.POST['height'])
     x = int(request.POST['x'])
     y = int(request.POST['y'])
-    game = create_new_game(width, height, x, y)
+    mine_probability = float(request.POST['mineProbability'])
+    game = create_new_game(width, height, mine_probability, x, y)
     result = process_click(game, x, y)
     DBSession.add(game)
     DBSession.flush()

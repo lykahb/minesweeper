@@ -1,10 +1,7 @@
 (function () {
-    var gameInfo = {
-        width: 10,
-        height: 10
-    };
+    var gameInfo = {};
 
-    $("#controls").append($("<button class='btn btn-primary'>New Game</button>").on("click", newGame));
+    $("#newGame").on("click", newGame);
 
     $("#board").on("click", "td", function () {
         var td = this;
@@ -17,7 +14,13 @@
 
         if (gameInfo.status == 'new') {
             gameInfo.history = [];
-            $.post("/game/new", {width: gameInfo.width, height: gameInfo.height, x: x, y: y},
+            $.post("/game/new", {
+                    width: gameInfo.width,
+                    height: gameInfo.height,
+                    mineProbability: gameInfo.mineProbability / 100,
+                    x: x,
+                    y: y
+                },
                 function (data) {
                     window.history.replaceState("", "Game " + data.game_id, "?game=" + data.game_id);
                     gameInfo.history.push({request: {action: "click", x: x, y: y}, response: data});
@@ -43,9 +46,12 @@
     });
 
     function newGame() {
+        gameInfo.width = $("#boardWidth").val();
+        gameInfo.height = $("#boardHeight").val();
+        gameInfo.mineProbability = $("#mineProbability").val();
+        gameInfo.status = 'new';
         $("#board").removeClass("won lost");
         $("#board tbody").empty().append(createBoard(gameInfo.width, gameInfo.height));
-        gameInfo.status = 'new';
     }
 
     function processClick(data) {
