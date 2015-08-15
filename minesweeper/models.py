@@ -4,7 +4,7 @@ from sqlalchemy import (
     Column,
     Integer,
     Text,
-    ForeignKey, DateTime)
+    ForeignKey, DateTime, PickleType)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     scoped_session,
@@ -17,6 +17,12 @@ Base = declarative_base()
 
 
 @unique
+class CellState(Enum):
+    empty = 1
+    mine = 2
+
+
+@unique
 class PlayerAction(Enum):
     click = 1
     flag = 2
@@ -25,7 +31,7 @@ class PlayerAction(Enum):
 class Game(Base):
     __tablename__ = 'games'
     id = Column(Integer, primary_key=True)
-    board_state = Column(Text)
+    board_state = Column(PickleType)
 
 
 class Player(Base):
