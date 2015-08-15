@@ -36,4 +36,5 @@ def new_game(request):
     game = Game(board_state=init_game_state(width, height, x, y))
     DBSession.add(game)
     DBSession.flush()
+    request.session['current_game'] = game.id
     return {'game_id': game.id}
