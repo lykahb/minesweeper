@@ -47,11 +47,17 @@
         replayActions(gameInfo.history.length, 500);
     });
 
-    $("#boardWidth, #boardHeight").on("change", function () {
-        var max = Math.floor($("#boardWidth").val() * $("#boardHeight").val() * 2 / 3);
-        var count = $("#minesCount").val();
-        $("#minesCount").attr("max", max).val(Math.min(max, count));
+    $("#boardWidth, #boardHeight, #minesCount").on("change", function () {
+        var value = parseInt(this.value);
+        var min = parseInt(this.min);
+        var max = parseInt(this.max);
+        this.value = Math.max(min, Math.min(value, max));
     });
+    $("#boardWidth, #boardHeight").on("change", function () {
+        var minesMax = Math.floor($("#boardWidth").val() * $("#boardHeight").val() * 2 / 3);
+        $("#minesCount").attr("max", minesMax).trigger("change");
+    });
+
     function newGame() {
         gameInfo.width = $("#boardWidth").val();
         gameInfo.height = $("#boardHeight").val();
