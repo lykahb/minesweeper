@@ -1,7 +1,19 @@
 (function () {
     var gameInfo = {};
 
-    $("#newGame").on("click", newGame);
+    $("#newGame").on("click", function () {
+        gameInfo.history = [];
+        newGame();
+        $.post("/game/new", {
+                width: gameInfo.width,
+                height: gameInfo.height,
+                minesCount: gameInfo.minesCount
+            },
+            function (data) {
+                window.history.replaceState("", "Game " + data.game_id, "?game=" + data.game_id);
+                gameInfo.status = 'playing';
+            }, "json");
+    });
 
     $("#board").on("click", "td", function () {
         var td = this;
@@ -12,21 +24,7 @@
             return;
         }
 
-        if (gameInfo.status == 'new') {
-            gameInfo.history = [];
-            $.post("/game/new", {
-                    width: gameInfo.width,
-                    height: gameInfo.height,
-                    mineProbability: gameInfo.mineProbability / 100,
-                    x: x,
-                    y: y
-                },
-                function (data) {
-                    window.history.replaceState("", "Game " + data.game_id, "?game=" + data.game_id);
-                    gameInfo.history.push({request: {action: "click", x: x, y: y}, response: data});
-                    processClick(data);
-                }, "json");
-        } else if (gameInfo.status == 'playing') {
+        if (gameInfo.status == 'playing') {
             $.post("/game/click", {x: x, y: y}, function (data) {
                 gameInfo.history.push({request: {action: "click", x: x, y: y}, response: data});
                 processClick(data);
@@ -36,10 +34,7 @@
         var td = this;
         var x = $(td).index();
         var y = $(td).parent().index();
-        if (gameInfo.status == 'new') {
-            gameInfo.history = [];
-            gameInfo.status = 'playing';
-        }
+
         if (gameInfo.status == 'playing' && !$(td).is(".empty")) {
             $.post("/game/toggle_flag", {x: x, y: y}, function () {
                 gameInfo.history.push({request: {action: "toggle_flag", x: x, y: y}});
@@ -53,10 +48,15 @@
         replayActions(gameInfo.history.length, 500);
     });
 
+    $("#boardWidth, #boardHeight").on("change", function () {
+        var max = Math.floor($("#boardWidth").val() * $("#boardHeight").val() * 2 / 3);
+        var count = $("#minesCount").val();
+        $("#minesCount").attr("max", max).val(Math.min(max, count));
+    });
     function newGame() {
         gameInfo.width = $("#boardWidth").val();
         gameInfo.height = $("#boardHeight").val();
-        gameInfo.mineProbability = $("#mineProbability").val();
+        gameInfo.minesCount = $("#minesCount").val();
         gameInfo.status = 'new';
         $("#board").removeClass("won lost");
         $("#board tbody").empty().append(createBoard(gameInfo.width, gameInfo.height));

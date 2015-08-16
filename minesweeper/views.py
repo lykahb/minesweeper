@@ -10,18 +10,22 @@ from .models import (
 
 
 # Creates a board with given dimensions that has no mines on the start position
-def create_new_game(width, height, mine_probability, start_x, start_y):
-    mines_count = 0
+def create_new_game(width, height, mines_count):
     board = [[0 for _ in range(width)] for _ in range(height)]
     visited_cells = [[False for _ in range(width)] for _ in range(height)]
-    for y in range(height):
-        for x in range(width):
-            if random.random() < mine_probability and not (x == start_x and y == start_y):
-                board[y][x] = True
-                mines_count += 1
-            else:
-                board[y][x] = False
-    return Game(board_state=board, visited_cells=visited_cells, mines_count=mines_count)
+    return Game(status=GameStatusEnum.new.value, width=width, height=height, board_state=board,
+                visited_cells=visited_cells, mines_count=mines_count)
+
+
+def initialize_board(game, start_x, start_y):
+    coords = set()
+    for y in range(game.height):
+        for x in range(game.width):
+            coords.add((x, y))
+    coords.remove((start_x, start_y))
+    for (x, y) in random.sample(coords, game.mines_count):
+        game.board_state[y][x] = True
+    DBSession.query(Game).filter(Game.id == game.id).update({Game.board_state: game.board_state})
 
 
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
@@ -52,17 +56,12 @@ def game_history(request):
 def new_game(request):
     width = int(request.POST['width'])
     height = int(request.POST['height'])
-    x = int(request.POST['x'])
-    y = int(request.POST['y'])
-    mine_probability = float(request.POST['mineProbability'])
-    game = create_new_game(width, height, mine_probability, x, y)
-    result = process_click(game, x, y)
+    mines_count = float(request.POST['minesCount'])
+    game = create_new_game(width, height, mines_count)
     DBSession.add(game)
     DBSession.flush()
     request.session['current_game'] = game.id
-    DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))
-    result['game_id'] = game.id
-    return result
+    return {'game_id': game.id}
 
 
 @view_config(route_name='click', renderer='json')
@@ -72,6 +71,10 @@ def click(request):
     game = DBSession.query(Game).get(request.session['current_game'])
     if x < 0 or x >= len(game.board_state[0]) or y < 0 or y >= len(game.board_state):
         return Response('Coordinates out of range', content_type='text/plain', status_int=500)
+    if game.status == GameStatusEnum.new.value:
+        initialize_board(game, x, y)
+        game.status = GameStatusEnum.playing.value
+
     if game.status != GameStatusEnum.playing.value or game.visited_cells[y][x]:
         return Response('Invalid request', content_type='text/plain', status_int=500)
     DBSession.add(PlayerAction(game_id=game.id, action=PlayerActionEnum.click.value, x=x, y=y))

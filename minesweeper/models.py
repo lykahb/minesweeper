@@ -24,6 +24,7 @@ class PlayerActionEnum(Enum):
 
 @unique
 class GameStatusEnum(Enum):
+    new = 'new'
     playing = 'playing'
     won = 'won'
     lost = 'lost'
@@ -35,6 +36,8 @@ class Game(Base):
     board_state = Column(PickleType)
     visited_cells = Column(PickleType)
     mines_count = Column(Integer)
+    width = Column(Integer)
+    height = Column(Integer)
     status = Column(Text, default=GameStatusEnum.playing.value)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
