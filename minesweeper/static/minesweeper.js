@@ -36,13 +36,21 @@
         var td = this;
         var x = $(td).index();
         var y = $(td).parent().index();
-        if ((gameInfo.status == 'new' || gameInfo.status == 'playing') && !$(td).is(".empty")) {
+        if (gameInfo.status == 'new') {
+            gameInfo.history = [];
+            gameInfo.status = 'playing';
+        }
+        if (gameInfo.status == 'playing' && !$(td).is(".empty")) {
             $.post("/game/toggle_flag", {x: x, y: y}, function () {
                 gameInfo.history.push({request: {action: "toggle_flag", x: x, y: y}});
                 $(td).toggleClass("flag");
             });
         }
         ev.preventDefault();
+    });
+
+    $("#showReplay").on("click", function () {
+        replayActions(gameInfo.history.length, 500);
     });
 
     function newGame() {
@@ -95,24 +103,31 @@
         return content;
     }
 
-    function replayActions(n) {
+    function replayActions(n, delay) {
         newGame();
-        for (var i = 0; i <= n && i < gameInfo.history.length; i++) {
+        var i = 0;
+        var next = function () {
+            if (!(i <= n && i < gameInfo.history.length)) {
+                return;
+            }
             var action = gameInfo.history[i];
             if (action.request.action == 'click') {
                 processClick(action.response);
             } else if (action.request.action == 'toggle_flag') {
                 getCell(action.request.x, action.request.y).toggleClass("flag");
             }
-        }
+            i++;
+            setTimeout(next, delay);
+        };
+        next();
     }
 
     // resume old game if any
     var oldGame = window.location.search.match(/game=(\d+)/);
     if (oldGame && oldGame[1]) {
         $.get("/game/history", {id: oldGame[1]}, function (data) {
-            gameInfo.width = data.width;
-            gameInfo.height = data.height;
+            $("#boardWidth").val(data.width);
+            $("#boardHeight").val(data.height);
             gameInfo.history = data.history;
             replayActions(gameInfo.history.length);
         }, "json");
