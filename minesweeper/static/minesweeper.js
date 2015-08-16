@@ -38,7 +38,7 @@
         if (gameInfo.status == 'playing' && !$(td).is(".empty")) {
             $.post("/game/toggle_flag", {x: x, y: y}, function () {
                 gameInfo.history.push({request: {action: "toggle_flag", x: x, y: y}});
-                $(td).toggleClass("flag");
+                $(td).toggleClass("flag glyphicon glyphicon-flag");
             });
         }
         ev.preventDefault();
@@ -75,7 +75,7 @@
     function drawFullBoard(boardState) {
         for (var i = 0; i < gameInfo.height; i++) {
             for (var j = 0; j < gameInfo.width; j++) {
-                getCell(j, i).empty().attr("class", boardState[i][j] ? "mine" : "empty")
+                getCell(j, i).empty().attr("class", boardState[i][j] ? "mine glyphicon glyphicon-certificate" : "empty")
             }
         }
     }
@@ -114,7 +114,7 @@
             if (action.request.action == 'click') {
                 processClick(action.response);
             } else if (action.request.action == 'toggle_flag') {
-                getCell(action.request.x, action.request.y).toggleClass("flag");
+                getCell(action.request.x, action.request.y).toggleClass("flag glyphicon glyphicon-flag");
             }
             i++;
             setTimeout(next, delay);

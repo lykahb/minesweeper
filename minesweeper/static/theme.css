@@ -18,20 +18,17 @@
     outline: green solid 5px;
 }
 
+#board td.glyphicon {
+    position: inherit;
+    display: table-cell;
+}
+
 #board td.empty {
     background-color: grey;
 }
 
-#board td.flag:before {
-    content: 'F';
-}
-
 #board td.mine {
     background-color: red;
-}
-
-#board td.mine:before {
-    content: 'M';
 }
 
 #controls {
