@@ -11,7 +11,6 @@
             },
             function (data) {
                 window.history.replaceState("", "Game " + data.game_id, "?game=" + data.game_id);
-                gameInfo.status = 'playing';
             }, "json");
     });
 
@@ -57,7 +56,7 @@
         gameInfo.width = $("#boardWidth").val();
         gameInfo.height = $("#boardHeight").val();
         gameInfo.minesCount = $("#minesCount").val();
-        gameInfo.status = 'new';
+        gameInfo.status = 'playing';
         $("#board").removeClass("won lost");
         $("#board tbody").empty().append(createBoard(gameInfo.width, gameInfo.height));
     }
